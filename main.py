@@ -18,7 +18,7 @@ screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption(PROJECT_NAME)
 clock = pygame.time.Clock()
 
-# --- ASSET LOADING WITH FALLBACKS ---
+# --- ASSET LOADING---
 def load_image(file_path, size):
     try:
         img = pygame.image.load(file_path).convert_alpha()
@@ -183,12 +183,10 @@ class synew2048:
             self.sync_animated_tiles()
 
     def draw(self, surface):
-        # 1. Draw empty slot backgrounds across all grid spaces
         for r in range(GRID_SIZE):
             for c in range(GRID_SIZE):
                 surface.blit(SPRITES[0], grid_to_pos(r, c))
 
-        # 2. Draw sliding or static number tiles
         for tile in self.animated_tiles:
             tile.draw(surface)
 
@@ -197,7 +195,7 @@ def main():
     game = synew2048()
 
     while True:
-        dt = clock.tick(FPS) / 1000.0  # Delta time in seconds
+        dt = clock.tick(FPS)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -213,12 +211,10 @@ def main():
                     game.move('UP')
                 elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                     game.move('DOWN')
-
-        # Update game animations
         game.update(dt)
 
-        # Render stage
-        screen.fill((40, 36, 32))  # Dark background tint behind slots
+        # Renders
+        screen.fill((40, 36, 32))
         game.draw(screen)
         pygame.display.flip()
 
