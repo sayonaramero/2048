@@ -39,7 +39,7 @@ SPRITES = {
 
 # --- HELPER FUNCTIONS ---
 def grid_to_pos(row, col):
-    """Converts grid row/col indices to screen (x, y) pixel coordinates."""
+    
     x = PADDING + col * (SLOT_SIZE + PADDING)
     y = PADDING + row * (SLOT_SIZE + PADDING)
     return pygame.Vector2(x, y)
@@ -52,7 +52,7 @@ class AnimatedTile:
         self.target_pos = grid_to_pos(target_row, target_col)
 
     def update(self, dt):
-        """Linearly interpolates current position towards target position."""
+        # hi
         if self.pos.distance_to(self.target_pos) > 0.5:
             self.pos += (self.target_pos - self.pos) * min(1.0, ANIMATION_SPEED * dt)
         else:
@@ -73,18 +73,18 @@ class synew2048:
         self.sync_animated_tiles()
 
     def get_state(self):
-        """Returns the raw 4x4 matrix representation for AI integration."""
+        
         return self.grid.copy()
 
     def spawn_tile(self):
-        """Spawns a new tile (90% chance of 2, 10% chance of 4) in an empty slot."""
+        
         empty_slots = list(zip(*np.where(self.grid == 0)))
         if empty_slots:
             row, col = random.choice(empty_slots)
             self.grid[row, col] = 2 if random.random() < 0.9 else 4
 
     def sync_animated_tiles(self):
-        """Rebuilds stationary tile animations based on current grid state."""
+       
         self.animated_tiles = []
         for r in range(GRID_SIZE):
             for c in range(GRID_SIZE):
@@ -93,7 +93,6 @@ class synew2048:
                     self.animated_tiles.append(AnimatedTile(val, r, c, r, c))
 
     def compress_and_merge_row(self, row):
-        """Applies 2048 merge rules to a single 1D array row."""
         non_zero = row[row != 0]
         new_row = []
         skip = False
@@ -159,7 +158,7 @@ class synew2048:
             self.animating = True
 
     def _unrotate_coords(self, r, c, rotations):
-        """Helper to convert rotated internal matrix coords back to global grid space."""
+  
         arr = np.zeros((GRID_SIZE, GRID_SIZE), dtype=int)
         arr[r, c] = 1
         arr = np.rot90(arr, rotations)
@@ -167,7 +166,7 @@ class synew2048:
         return int(unrotated_pos[0][0]), int(unrotated_pos[1][0])
 
     def update(self, dt):
-        """Updates animation frames and spawns a new tile once sliding finishes."""
+       
         if not self.animating:
             return
 
