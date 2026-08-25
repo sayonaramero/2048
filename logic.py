@@ -38,7 +38,7 @@ def _movement_step_indexer(i: int, move: Movement):
     _ = Orientation.ROW if move == Movement.DOWN or move == Movement.UP else Orientation.COLUMN 
     return 2-i, _
 
-def _direction_to_absolute_mov_dir(move: Movement)
+def _direction_to_absolute_mov_dir(move: Movement):
     is_column = move == Movement.DOWN or move == Movement.UP
     is_positive = move == Movement.UP or move == Movement.RIGHT
     abs_dir = [0, 0]
