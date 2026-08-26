@@ -48,14 +48,14 @@ def _movement_step_indexer(i: int, move: Movement):
     '''
     is_positive = move == Movement.UP or move == Movement.RIGHT
     _ = Orientation.ROW if move == Movement.DOWN or move == Movement.UP else Orientation.COLUMN 
-    return i if is_positive else 2-i, _
+    return i if not is_positive else (GRID_UNITS - 1)-i, _
 
 def _flip_matrix(matrix: list[list]) -> list:
     matrix_copy = copy.deepcopy(matrix)
     try:
         for r, rv in enumerate(matrix):
             for c, cell_value in enumerate(rv):
-                matrix_copy[c][r] = cell_value
+                matrix_copy[(GRID_UNITS - 1) - c][(GRID_UNITS - 1) - r] = cell_value
         return matrix_copy
     except IndexError:
         print(f"{DebugType.ERROR.value} YOU CAN ONLY USE A aXa dimensional list [matrix]")
@@ -70,9 +70,9 @@ def _direction_to_absolute_mov_dir(move: Movement) -> tuple[list[int,int], bool]
     abs_dir = 0
 
     if is_positive:
-        abs_dir = 1
-    else:
         abs_dir = -1
+    else:
+        abs_dir = 1
 
     return abs_dir, is_column
 
@@ -124,20 +124,24 @@ class Game():
         mv, is_column = _direction_to_absolute_mov_dir(direction)
         self.log(f"Is movement Column? <{is_column}> MV: <{mv}>", 2)
         if not is_column:
+            #mv = 0 - mv
             self.log(f"old Matrix <{new_matrix}>", 2)
             new_matrix = _flip_matrix(new_matrix)
-            self.log(f"new Matrix <\n{f"{new_matrix}".replace("],", "]\n")}>", 2)
-        for batch in range(int(GRID_UNITS / 2)):
-            self.log(f"BATCH {batch}\n{f"{new_matrix}".replace("],", "]\n")}", 1)
-            for _step in range(GRID_UNITS - (1 + batch)):
-                step = _step + batch
+        self.log(f"Old Matrix <\n{f"{new_matrix}".replace("],", "]\n")}>", 2)
+        for batch in range(GRID_UNITS - 1):
+            for step in range(GRID_UNITS - 1):
+                #step = _step + batch
+                #self.log(f"{step} | {batch} | {_step}", 1)
                 index, orientation = _movement_step_indexer(step, direction)
+                print(index)
+                #print
                 for item_index in range(GRID_UNITS):
                     operator = new_matrix[index][item_index]
                     operated = new_matrix[index + mv][item_index]
                     if operated == operator or operated == 0:
                         new_matrix[index + mv][item_index] = operated + operator
                         new_matrix[index][item_index] = 0
+            self.log(f"BATCH {batch}\n{f"{new_matrix}".replace("],", "]\n")}", 1)
 
         if not is_column:
             new_matrix = _flip_matrix(new_matrix)
@@ -149,10 +153,10 @@ class Game():
         print("Game Started")
         
         self.position_matrix = self.position_matrix = [
-            [2,0,0,0],
-            [2,0,0,0],
-            [2,0,0,0],
-            [2,0,0,0]
+            [0,0,0,0],
+            [0,0,0,0],
+            [0,0,0,0],
+            [0,0,0,0]
         ]
 
 gm = Game(Verbosity.FULL_DEBUG)
@@ -162,9 +166,17 @@ print(_movement_step_indexer(0, Movement.UP))
 for _ in range(5):
     gm.generate_random_block()
 '''
-    
-print(gm.position_matrix)
 
-gm.move(Movement.UP)
-
-print(gm.position_matrix)
+try:
+    while True:
+        inp = input("Key: ")
+        keycode = {"w": Movement.UP, "a": Movement.LEFT, "s": Movement.DOWN, "d": Movement.RIGHT}
+        move = keycode.get(inp.lower())
+        if move:
+            gm.move(move)
+            gm.generate_random_block()
+            gm.log(f"BOARD:\n{Fore.BLUE}{f"{gm.position_matrix}".replace("],", "]\n")}{Style.RESET_ALL}", 1)
+        else:
+            gm.log("Invalid Key", 0, DebugType.WARNING)
+except KeyboardInterrupt:
+    print("Exiting...")
