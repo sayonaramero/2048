@@ -116,6 +116,7 @@ class synew2048:
         Executes a direction move: 'LEFT', 'RIGHT', 'UP', 'DOWN'.
         Tracks initial and final positions to instantiate sliding animations.
         """
+
         if self.animating:
             return
 
