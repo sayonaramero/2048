@@ -127,7 +127,7 @@ class Game():
             #mv = 0 - mv
             self.log(f"old Matrix <{new_matrix}>", 2)
             new_matrix = _flip_matrix(new_matrix)
-        self.log(f"Old Matrix <\n{f"{new_matrix}".replace("],", "]\n")}>", 2)
+        self.log(f"Old Matrix <\n{str(new_matrix).replace("],", "]\n")}>", 2)
         for batch in range(GRID_UNITS - 1):
             for step in range(GRID_UNITS - 1):
                 #step = _step + batch
@@ -141,11 +141,13 @@ class Game():
                     if operated == operator or operated == 0:
                         new_matrix[index + mv][item_index] = operated + operator
                         new_matrix[index][item_index] = 0
-            self.log(f"BATCH {batch}\n{f"{new_matrix}".replace("],", "]\n")}", 1)
+            mtrx_str = f"{new_matrix}".replace("],", "]\n")
+            self.log(f'\n{mtrx_str}', 1)
 
         if not is_column:
             new_matrix = _flip_matrix(new_matrix)
-        self.log(f"\n{f"{new_matrix}".replace("],", "]\n")}", 1)
+        mtrx_str = f"{new_matrix}".replace("],", "]\n")
+        self.log(f'\n{mtrx_str}', 1)
         self.position_matrix = new_matrix
 
     def __init__(self, verbosity: Verbosity):
