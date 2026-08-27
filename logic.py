@@ -159,13 +159,10 @@ class Game():
             [0,0,0,0]
         ]
 
-gm = Game(Verbosity.FULL_DEBUG)
-print(_movement_step_indexer(0, Movement.UP))
+# Example Game Client (Terminal)
 
 '''
-for _ in range(5):
-    gm.generate_random_block()
-'''
+gm = Game(Verbosity.FULL_DEBUG)
 
 try:
     while True:
@@ -180,3 +177,4 @@ try:
             gm.log("Invalid Key", 0, DebugType.WARNING)
 except KeyboardInterrupt:
     print("Exiting...")
+'''
