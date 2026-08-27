@@ -127,13 +127,13 @@ class Game():
             #mv = 0 - mv
             self.log(f"old Matrix <{new_matrix}>", 2)
             new_matrix = _flip_matrix(new_matrix)
-        self.log(f"Old Matrix <\n{str(new_matrix).replace("],", "]\n")}>", 2)
+        matrix_str = str(new_matrix).replace('],', ']\n')
+        self.log(f"Old Matrix <\n{matrix_str}>", 2)
         for batch in range(GRID_UNITS - 1):
             for step in range(GRID_UNITS - 1):
                 #step = _step + batch
                 #self.log(f"{step} | {batch} | {_step}", 1)
                 index, orientation = _movement_step_indexer(step, direction)
-                print(index)
                 #print
                 for item_index in range(GRID_UNITS):
                     operator = new_matrix[index][item_index]
@@ -152,7 +152,7 @@ class Game():
 
     def __init__(self, verbosity: Verbosity):
         self.verbosity = verbosity
-        print("Game Started")
+        print("Game Started", 1)
         
         self.position_matrix = self.position_matrix = [
             [0,0,0,0],
@@ -163,7 +163,7 @@ class Game():
 
 # Example Game Client (Terminal)
 
-'''
+"""
 gm = Game(Verbosity.FULL_DEBUG)
 
 try:
@@ -174,9 +174,11 @@ try:
         if move:
             gm.move(move)
             gm.generate_random_block()
-            gm.log(f"BOARD:\n{Fore.BLUE}{f"{gm.position_matrix}".replace("],", "]\n")}{Style.RESET_ALL}", 1)
+            gm_pos = (gm.position_matrix).replace('],', ']\n')
+            gm.log(f"BOARD:\n{Fore.BLUE}{gm_pos}{Style.RESET_ALL}", 1)
         else:
             gm.log("Invalid Key", 0, DebugType.WARNING)
 except KeyboardInterrupt:
     print("Exiting...")
-'''
+
+"""
