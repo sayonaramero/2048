@@ -138,7 +138,7 @@ class Game():
                 for item_index in range(GRID_UNITS):
                     operator = new_matrix[index][item_index]
                     operated = new_matrix[index + mv][item_index]
-                    if operated == operator or operated == 0:
+                    if (operated == operator and batch == 0) or operated == 0:
                         new_matrix[index + mv][item_index] = operated + operator
                         new_matrix[index][item_index] = 0
             mtrx_str = f"{new_matrix}".replace("],", "]\n")
@@ -163,7 +163,7 @@ class Game():
 
 # Example Game Client (Terminal)
 
-'''
+
 gm = Game(Verbosity.FULL_DEBUG)
 
 try:
@@ -179,4 +179,3 @@ try:
             gm.log("Invalid Key", 0, DebugType.WARNING)
 except KeyboardInterrupt:
     print("Exiting...")
-'''
