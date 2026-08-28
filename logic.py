@@ -80,6 +80,23 @@ def _direction_to_absolute_mov_dir(move: Movement) -> tuple[list[int,int], bool]
 print("Game Logic Engine Starting!")
 
 class Game():
+    def check_game_over(self) -> bool:
+        '''
+        Checks for the Game Over
+        '''
+        for row in range(GRID_UNITS):
+            for column in range(GRID_UNITS):
+                if column < GRID_UNITS - 1 and self.position_matrix[row][column] == self.position_matrix[row][column + 1]:
+                    return False
+                if column > 0 and self.position_matrix[row][column] == self.position_matrix[row][column - 1]:
+                    return False
+                if row < GRID_UNITS - 1 and self.position_matrix[row][column] == self.position_matrix[row + 1][column]:
+                    return False
+                if row > 0 and self.position_matrix[row][column] == self.position_matrix[row - 1][column]:
+                    return False
+                self.is_game_over = True
+                return True
+
     def log(self, msg: str, verbosity_lvl: int, debug_type: DebugType=DebugType.LOG):
         if self.verbosity.value >= verbosity_lvl:
             print(f"{debug_type.value} {msg}")
@@ -94,7 +111,7 @@ class Game():
             [0,0,0,0]
         ]
 
-    def generate_random_block(self):
+    def generate_random_block(self) -> bool:
         '''
         Generates random blocks in the grid
         '''
@@ -106,6 +123,8 @@ class Game():
             for column in range(GRID_SIZE[0]):
                 if self.position_matrix[row][column] == 0:
                     empty_squares.append([row, column])
+        if len(empty_squares) == 0:
+            return False
 
         random_square = empty_squares[randint(0, len(empty_squares) - 1)]
 
@@ -115,6 +134,7 @@ class Game():
         
         #print(f"Generating {square_value} at X {random_square[0]} Y {random_square[1]}")
         self.log(f"Generating {square_value} at X {random_square[0]} Y {random_square[1]}", 1)
+        return True
 
     def move(self, direction: Movement) -> int:
         '''
@@ -160,6 +180,7 @@ class Game():
         self.verbosity = verbosity
         print("Game Started", 1)
         
+        self.is_game_over: bool = False
         self.position_matrix = self.position_matrix = [
             [0,0,0,0],
             [0,0,0,0],
