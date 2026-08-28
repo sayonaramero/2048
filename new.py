@@ -3,6 +3,25 @@ import pygame
 import sys
 from logic import Game, Movement, Verbosity
 import copy
+
+import torch
+import ai
+
+
+# initialize the AI
+device = torch.device(ai.device if hasattr(ai, 'device') else 'cpu')
+torch.set_default_device(device)
+
+model = ai.model()
+
+try:
+
+    model.load_state_dict(torch.load('weights.pth', map_location=device, weights_only=True))
+    model.eval()
+
+except FileNotFoundError:
+    print("Weights not found")
+
 # Configuration
 
 OFFSET_Y = 130
@@ -74,7 +93,6 @@ class run_game:
         if self.game_over == True:
             self.grid = [[0] * 4 for _ in range(4)]
             self.score = 0
-            self.bestscore = 0
             self.lastmove = "None"
             self.moving = False
             self.animations = []
@@ -110,6 +128,9 @@ class run_game:
         if self.isanimating:
             for anim in self.animations:
                 self.draw_single_tile(anim["c_x"], anim["c_y"], anim["value"])
+
+        if self.checkgameover() and not self.isanimating:
+            self.render_game_over()
         
 
     def generate_cell(self): # Render a cell
@@ -174,7 +195,7 @@ class run_game:
     def draw_score_box(self, label, value, x_pos):
         box_w, box_h = 100, 50
         y_pos = 40
-        pygame.draw.rect(screen, CONTAINERBG, (x_pos, y_pos, box_w, box_h), border_radius=6)
+        pygame.draw.rect(screen, CONTAINERBG, (x_pos, y_pos, box_w, box_h), border_radius=12)
         
         # label
         lbl_surf = SCORE_TITLE_FONT.render(label, True, (150, 160, 165))
@@ -314,6 +335,9 @@ class run_game:
             if moving:
                 self.generate_cell()
 
+        if self.score > self.bestscore:
+            self.bestscore = self.score
+
         if self.checkgameover():
             self.game_over = True
             print("GAME OVER")
@@ -340,6 +364,21 @@ class run_game:
 
         return True
 
+    def render_game_over(self):
+        overlay = pygame.Surface((CONTAINER, CONTAINER), pygame.SRCALPHA)
+        overlay.fill((39, 46, 48, 220))  # (R, G, B, Alpha)
+        screen.blit(overlay, (OFFSET_X, OFFSET_Y))
+
+        go_font = pygame.font.SysFont("arial", 48, bold=True)
+        go_surf = go_font.render("GAME OVER", True, (255, 255, 255))
+        go_rect = go_surf.get_rect(center=(OFFSET_X + CONTAINER // 2, OFFSET_Y + CONTAINER // 2 - 20))
+        screen.blit(go_surf, go_rect)
+  
+        sub_font = pygame.font.SysFont("arial", 20, bold=True)
+        sub_surf = sub_font.render("Press 'R' to Restart", True, (180, 190, 195))
+        sub_rect = sub_surf.get_rect(center=(OFFSET_X + CONTAINER // 2, OFFSET_Y + CONTAINER // 2 + 30))
+        screen.blit(sub_surf, sub_rect)
+
         
 
 
@@ -347,36 +386,43 @@ class run_game:
 
 
     
-def get_ai_move(current_grid):
-    """Validates or invalidates the AI's next step and shoots it through."""
-    best_move = None
-    best_score = -1
-    valid_moves = []
-    
-    for direction in [Movement.UP, Movement.DOWN, Movement.LEFT, Movement.RIGHT]:
+def get_ai_move(current_grid, model):
+    """Feeding the grid to the model & returns best move"""
+
+    grid=[]
+    for row in current_grid:
+        for i in row:
+            grid.append(i)
+
+    with torch.no_grad():
+        tensor_grid = torch.tensor(grid, dtype=torch.float32)
+        predict = model(tensor_grid)
+
+    while True:
+
+        choice = model.choose(predict).tolist()[0]
+
+        direction = Movement(choice+1)
+
         sim = Game(Verbosity.NO_DEBUG)
         sim.position_matrix = copy.deepcopy(current_grid)
         sim.move(direction)
-        
+
         if sim.position_matrix != current_grid:
-            valid_moves.append(direction)
-            empty_spaces = sum(row.count(0) for row in sim.position_matrix)
-            
-            if empty_spaces > best_score:
-                best_score = empty_spaces
-                best_move = direction
-                
-    if best_move is None and valid_moves:
-        game = run_game()
-        game.checkgameover()
-        return valid_moves[0]
-        
-    return best_move
+            return direction
+        else:
+
+            predict[choice] = -float('inf')
+
+            if torch.all(predict == -float('inf')):
+                return None
+
+
 # @suji
 def synew():
     
     AI_ENABLED = False
-    DELAY = 750 # miliseconds
+    DELAY = 550 # miliseconds
     game = run_game()
     last_move = pygame.time.get_ticks()
 
@@ -395,7 +441,7 @@ def synew():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN and not AI_ENABLED and not game.isanimating:
+            if event.type == pygame.KEYDOWN and not AI_ENABLED and not game.isanimating and not game.checkgameover():
                 if event.key == pygame.K_a: game.move_cell("left")
                 elif event.key == pygame.K_d: game.move_cell("right")
                 elif event.key == pygame.K_w: game.move_cell("up")
@@ -408,9 +454,9 @@ def synew():
                     print(f"ai enabled: {AI_ENABLED}")
 
 
-        if AI_ENABLED and (time - last_move > DELAY) and not game.isanimating:
+        if AI_ENABLED and (time - last_move > DELAY) and not game.isanimating and not game.checkgameover():
 
-            chosen_move = get_ai_move(game.grid)
+            chosen_move = get_ai_move(game.grid, model)
 
             if chosen_move:
 
