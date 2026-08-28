@@ -2,3 +2,4 @@
 .venv/
 
 _test.py
+weights.pth

@@ -33,6 +33,7 @@ import time
 from logic import Verbosity, Movement
 import copy
 import json
+from colorama import Fore, Style
 
 torch.set_default_device(ai.device)
 
@@ -52,15 +53,15 @@ def mutate(model: ai.model, chance: float = 0.1):
             param_row.add_(mutation)
             
 
-def get_game_matrix(games: list[logic.Game]) -> list:
+def get_game_matrix(game: logic.Game) -> list:
     #success = game.generate_random_block()
     #if not success:
     #    game.check_game_over()
     matrix = []
     for row in game.position_matrix:
         for item in row:
-            matrix.append(item)
-    return matrix
+            matrix.append(torch.log2(torch.tensor(item)))
+    return torch.tensor(matrix, dtype=torch.float32)
 
 best_weights = {}
 
@@ -85,6 +86,7 @@ try:
         rewards = [[] for _ in range(len(models))]
         games = [logic.Game(DEFAULT_VERBOSITY) for _ in range(len(models))]
         for game_id, model in enumerate(models):
+            print(f"{Fore.GREEN}[i]{Style.RESET_ALL} - Cycle #{life_id} - Training Model [{game_id + 1}/{len(models)}])      ", end='\r', flush=True)
             game = games[game_id]
             for game_loop in range(cycles):
                 #while True:
@@ -92,7 +94,7 @@ try:
                 game.generate_random_block()
 
                 #print(torch.randn(4, ai.INPUT_LAYER_DIM))        
-                prediction = model(torch.tensor(dataset, dtype=torch.float32))
+                prediction = model(dataset)
                 #print(pred)
 
                 while True:
@@ -124,18 +126,18 @@ try:
                 #print(_rw)
                 '''
                 if game.is_game_over:
-                    print("GAME OVER!")
                     break
                 reward = moved_tiles
                 reward += 0.1 * game.get_empty_squares()
 
                 rewards[game_id].append(reward)
                 rewards_ind[game_id] += reward
-                new_state = torch.tensor(get_game_matrix(games), dtype=torch.float32)
+                new_state = get_game_matrix(game)
                 loss = model.calculate_loss(torch.max(prediction, dim=0)[0], new_state, reward, crit)
                 loss.backward()
                 model.zero_grad()
             max_moves.append(game.moves)
+        print("\n")
         id = torch.argmax(rewards_ind)
 
         best_weights = copy.deepcopy(models[id].state_dict())
@@ -154,6 +156,7 @@ try:
         #    cycles -= 10
         #if life_id % 5 == 0:
         #    cycles += 3
+        #print("\n")
 except KeyboardInterrupt:
     print("Exiting...")
 finally:
