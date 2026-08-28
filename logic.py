@@ -116,10 +116,13 @@ class Game():
         #print(f"Generating {square_value} at X {random_square[0]} Y {random_square[1]}")
         self.log(f"Generating {square_value} at X {random_square[0]} Y {random_square[1]}", 1)
 
-    def move(self, direction: Movement):
+    def move(self, direction: Movement) -> int:
         '''
         Moves the matrix
         '''
+        # Counts how many unions were made
+        unions = 0
+
         new_matrix = copy.deepcopy(self.position_matrix)
         mv, is_column = _direction_to_absolute_mov_dir(direction)
         self.log(f"Is movement Column? <{is_column}> MV: <{mv}>", 2)
@@ -139,10 +142,13 @@ class Game():
                     operator = new_matrix[index][item_index]
                     operated = new_matrix[index + mv][item_index]
                     if (operated == operator and batch == 0) or operated == 0:
+                        if operated == operator and batch == 0:
+                            unions += 1
                         new_matrix[index + mv][item_index] = operated + operator
                         new_matrix[index][item_index] = 0
             mtrx_str = f"{new_matrix}".replace("],", "]\n")
             self.log(f'\n{mtrx_str}', 1)
+        return unions
 
         if not is_column:
             new_matrix = _flip_matrix(new_matrix)
