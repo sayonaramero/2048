@@ -38,10 +38,19 @@ torch.set_default_device(ai.device)
 
 BATCHES = 4
 DEFAULT_VERBOSITY = Verbosity.NO_DEBUG
-models = [ai.model() for _ in range(2)]
+models = [ai.model() for _ in range(30)]
 cycles = 1000
 
 crit = torch.nn.MSELoss()
+def mutate(model: ai.model, chance: float = 0.1):
+    with torch.no_grad():
+        for param_row in model.parameters():
+            mask = torch.rand_like(param_row) < chance
+
+            mutation = mask * 0.15 * torch.randn_like(param_row)
+
+            param_row.add_(mutation)
+            
 
 def get_game_matrix(games: list[logic.Game]) -> list:
     #success = game.generate_random_block()
@@ -134,6 +143,7 @@ try:
         for i in range(len(models)):
             if i != id:
                 models[i].load_state_dict(best_weights)
+                mutate(models[i])
 
         mtrx_str = f"{games[id].position_matrix}".replace("],", "]\n")
         games[id].log(f"\n{mtrx_str}", 0)

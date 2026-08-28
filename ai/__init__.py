@@ -7,7 +7,7 @@ from random import randint
 # -------- Constants -------- #
 
 INPUT_LAYER_DIM = 16
-HIDDEN_LAYER_DIM = 200
+HIDDEN_LAYER_DIM = 256
 OUTPUT_LAYER_DIM = 4
 
 # --------------------------- #
@@ -34,7 +34,8 @@ class model(nn.Module):
         super(model, self).__init__()
         self.layers = nn.ModuleList([
             nn.Linear(INPUT_LAYER_DIM, HIDDEN_LAYER_DIM),
-            nn.ReLU(),
+            nn.LeakyReLU(),
+            nn.LeakyReLU(),
             nn.Linear(HIDDEN_LAYER_DIM, OUTPUT_LAYER_DIM),
         ])
     def forward(self, input: torch.Tensor):
