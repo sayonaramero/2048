@@ -2,6 +2,7 @@ from enum import Enum, StrEnum
 from random import randint
 from colorama import Style, Fore
 import copy
+import math
 
 # alliases (ignore)
 
@@ -86,6 +87,8 @@ class Game():
         '''
         for row in range(GRID_UNITS):
             for column in range(GRID_UNITS):
+                if self.position_matrix[row][column] == 0:
+                    return False
                 if column < GRID_UNITS - 1 and self.position_matrix[row][column] == self.position_matrix[row][column + 1]:
                     return False
                 if column > 0 and self.position_matrix[row][column] == self.position_matrix[row][column - 1]:
@@ -94,8 +97,8 @@ class Game():
                     return False
                 if row > 0 and self.position_matrix[row][column] == self.position_matrix[row - 1][column]:
                     return False
-                self.is_game_over = True
-                return True
+        self.is_game_over = True
+        return True
 
     def log(self, msg: str, verbosity_lvl: int, debug_type: DebugType=DebugType.LOG):
         if self.verbosity.value >= verbosity_lvl:
@@ -110,7 +113,14 @@ class Game():
             [0,0,0,0],
             [0,0,0,0]
         ]
-
+    def get_empty_squares(self):
+        empty_squares: list[list[int, int]] = []
+        # Checks the empty squares
+        for row in range(GRID_SIZE[1]):
+            for column in range(GRID_SIZE[0]):
+                if self.position_matrix[row][column] == 0:
+                    empty_squares.append([row, column])
+        return len(empty_squares)
     def generate_random_block(self) -> bool:
         '''
         Generates random blocks in the grid
@@ -124,6 +134,7 @@ class Game():
                 if self.position_matrix[row][column] == 0:
                     empty_squares.append([row, column])
         if len(empty_squares) == 0:
+            self.check_game_over()
             return False
 
         random_square = empty_squares[randint(0, len(empty_squares) - 1)]
@@ -140,6 +151,8 @@ class Game():
         '''
         Moves the matrix
         '''
+        self.moves += 1
+        merged = []
         # Counts how many unions were made
         unions = 0
 
@@ -162,13 +175,14 @@ class Game():
                     operator = new_matrix[index][item_index]
                     operated = new_matrix[index + mv][item_index]
                     if (operated == operator and batch == 0) or operated == 0:
-                        if operated == operator and batch == 0:
+                        if operated == operator and operated != 0 and batch == 0:
+                            #print(new_matrix)
+                            merged.append(math.log2(operated))
                             unions += 1
                         new_matrix[index + mv][item_index] = operated + operator
                         new_matrix[index][item_index] = 0
             mtrx_str = f"{new_matrix}".replace("],", "]\n")
             self.log(f'\n{mtrx_str}', 1)
-        return unions
 
         if not is_column:
             new_matrix = _flip_matrix(new_matrix)
@@ -176,10 +190,12 @@ class Game():
         self.log(f'\n{mtrx_str}', 1)
         self.position_matrix = new_matrix
 
+        return unions, merged
+
     def __init__(self, verbosity: Verbosity):
         self.verbosity = verbosity
-        print("Game Started", 1)
-        
+        #print("Game Started", 1)
+        self.moves = 0
         self.is_game_over: bool = False
         self.position_matrix = self.position_matrix = [
             [0,0,0,0],
@@ -190,8 +206,8 @@ class Game():
 
 # Example Game Client (Terminal)
 
+'''
 
-"""
 gm = Game(Verbosity.FULL_DEBUG)
 
 try:
@@ -202,11 +218,11 @@ try:
         if move:
             gm.move(move)
             gm.generate_random_block()
-            gm_pos = (gm.position_matrix).replace('],', ']\n')
+            gm_pos = str(gm.position_matrix).replace('],', ']\n')
             gm.log(f"BOARD:\n{Fore.BLUE}{gm_pos}{Style.RESET_ALL}", 1)
         else:
             gm.log("Invalid Key", 0, DebugType.WARNING)
 except KeyboardInterrupt:
     print("Exiting...")
-"""
 
+'''

@@ -27,6 +27,8 @@ print(f"{Fore.GREEN}-- CUDA Available ({Fore.BLUE}{torch.cuda.get_device_name(0)
 
 device = torch.device("cuda" if torch.cuda.is_available() else FALLBACK_DEVICE)
 
+torch.set_default_device(device)
+
 class model(nn.Module):
     def __init__(self):
         super(model, self).__init__()
@@ -43,21 +45,21 @@ class model(nn.Module):
         return out
     def choose(self, output: torch.Tensor):
         with torch.no_grad():
-            actions = torch.argmax(output, dim=1)
+            actions = torch.argmax(output, dim=0)
         random_actions = torch.randint(0, OUTPUT_LAYER_DIM, size=(len(output),))
-        do_random_choice = torch.rand(len(output)) > 0.85
+        do_random_choice = torch.rand(len(output)) > 1
         choosen_actions = torch.where(do_random_choice, random_actions, actions)
         return choosen_actions
-    def calculate_loss(self, legacy_q_values, next_state: torch.Tensor, reward: float, criterion) -> torch.Tensor:
+    def calculate_loss(self, legacy_q_value, next_state: torch.Tensor, reward: float, criterion) -> torch.Tensor:
         '''
         model_out_t1 2nd Prediction
         '''
         with torch.no_grad():
             next_prediction = self(next_state)
-            print(torch.max(next_prediction, dim=1))
-            target = reward + DEFAULT_GAMMA * torch.max(next_prediction, dim=1)[0]
+            #print(torch.max(next_prediction, dim=1))
+            target = reward + DEFAULT_GAMMA * torch.max(next_prediction, dim=0)[0]
 
         #print(f"-----\n{next_prediction}")
-        print(f"Predicted Value: {legacy_q_values}\n---\nCorrect Value {target}")
-        loss = criterion(legacy_q_values, target)
+        #print(f"Predicted Value: {legacy_q_values}\n---\nCorrect Value {target}")
+        loss = criterion(legacy_q_value, target)
         return loss
