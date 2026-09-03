@@ -45,9 +45,9 @@ SCORE_TITLE_FONT = pygame.font.SysFont("arial", 16, bold=True)
 SCORE_VAL_FONT = pygame.font.SysFont("arial", 20, bold=True)
 Running = True
 
-# I can see colors!!
+# I can see colors
 
-pallete = {
+palette = {
      0: (75, 98, 107),
      2: (71, 143, 186),
      4: (65, 237, 224),
@@ -208,7 +208,7 @@ class run_game:
         screen.blit(val_surf, val_rect)
         
     def draw_single_tile(self, px, py, val):
-        getcolor = pallete.get(val, (75, 98, 107))
+        getcolor = palette.get(val, (75, 98, 107))
         pygame.draw.rect(screen, getcolor, (px, py, TILE_SIZE, TILE_SIZE), border_radius=8)
         if val > 0:
             text = FONT.render(str(val), True, (254, 255, 120))
